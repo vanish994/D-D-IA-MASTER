@@ -181,6 +181,19 @@ class TurnRulesTest {
         assertEquals(TurnRules.TurnUsage(), next.state.usage.getValue("enemy"))
     }
 
+    @Test fun defeatedActiveCombatantCanBeSkipped() {
+        val initial = combat()
+        val defeatedHero = initial.combatants.getValue("hero").copy(currentHp = 0)
+        val state = initial.copy(combatants = initial.combatants + ("hero" to defeatedHero))
+        val result = TurnRules.execute(
+            state,
+            TurnRules.ActionIntent(TurnRules.IntentType.END_TURN, "hero")
+        )
+
+        assertTrue(result.accepted)
+        assertEquals("enemy", result.state.activeActorId)
+    }
+
     @Test fun abilityModifierAndProficiencyBoundariesAreCorrect() {
         assertEquals(-1, RulesEngine.abilityModifier(9))
         assertEquals(0, RulesEngine.abilityModifier(10))
