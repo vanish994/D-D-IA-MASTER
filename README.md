@@ -1,39 +1,33 @@
 # RPG Solo D&D 2024 — A Cripta
 
-Protótipo inicial de RPG solo para Android, feito com Godot 4.x e pensado para quem está começando a programar.
+Protótipo de RPG solo para Android, migrando para **Kotlin + Jetpack Compose**. O objetivo é desenvolver e compilar o APK usando o GitHub, inclusive pelo celular Android, sem precisar editar cenas num motor de jogos.
 
-## O que já existe
+## Estado atual
 
-- Criação de personagem com nome e três arquétipos iniciais: Guerreiro, Ladino e Clérigo.
-- Uma cena curta de aventura.
-- Combate por turnos contra um goblin.
-- Ataque, dano, pontos de vida e poção de cura.
-- Recompensa por vitória.
-- Salvamento e carregamento local em JSON.
+- Aplicativo Android nativo com interface de toque.
+- Criação de aventureiro: Guerreiro, Ladino ou Clérigo.
+- Ficha básica com pontos de vida, classe, CA e bônus de ataque.
+- Aventura curta e combate por turnos contra um goblin.
+- Rolagem de d20, ataques, dano e poção de cura.
+- Salvamento local simples no aparelho.
+- GitHub Actions compila um APK de depuração automaticamente.
 
-## Como abrir
+## Como obter o APK
 
-1. Instale o Godot 4.x no dispositivo ou computador.
-2. Baixe ou clone este repositório.
-3. No Godot, importe a pasta que contém o arquivo project.godot.
-4. Execute a cena principal.
+1. Abra a aba **Actions** deste repositório no GitHub.
+2. Selecione **Build Android APK**.
+3. Toque em **Run workflow** e confirme, ou aguarde o build automático após uma alteração.
+4. Quando o processo terminar com sucesso, abra a execução e baixe o artefato **RPG-Solo-DnD-Android-APK**.
+5. Extraia o ZIP e instale o arquivo APK no Android. O sistema pode pedir autorização para instalar apps dessa origem.
 
-## Controles
+## Tecnologia
 
-Toque nos botões da tela. A interface é vertical e usa controles de UI que podem ser tocados.
+- Kotlin para as regras e o estado do jogo.
+- Jetpack Compose para a interface Android.
+- Gradle e GitHub Actions para compilar o APK.
 
-## Salvamento
+Os arquivos antigos do protótipo Godot continuam no repositório por enquanto, como referência. A compilação Android agora usa a pasta `app/` e o projeto Gradle.
 
-O jogo grava em user://solo_rpg_save.json, no armazenamento privado do aplicativo Godot. O salvamento é local ao dispositivo; enviar o projeto ao GitHub não envia automaticamente o progresso do jogo.
+## Importante
 
-## Escopo e regras
-
-Este é um protótipo educativo e simplificado, inspirado em fantasia de RPG. As estatísticas e regras ainda não representam uma implementação completa ou oficialmente validada das regras de D&D 2024.
-
-## Próximos passos
-
-1. Testar importação e execução no Godot Android.
-2. Ajustar erros que o editor mostrar.
-3. Melhorar regras de combate e opções de exploração.
-4. Adicionar inventário e ficha mais detalhada.
-5. Exportar e testar um APK Android.
+Esta versão é um protótipo jogável com regras simplificadas, não uma implementação completa nem oficialmente validada de D&D 2024. O salvamento é local ao aparelho e ainda é básico. O APK só estará pronto para instalar depois que o workflow do GitHub terminar com sucesso.
