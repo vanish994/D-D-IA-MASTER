@@ -112,11 +112,12 @@ object RulesEngine {
         val roll = rollD20(attackBonus, mode, random)
         val critical = roll.chosen == 20
         val hit = critical || (roll.chosen != 1 && roll.total >= targetArmorClass)
-        val parsed = parseDice(damageDice)
+        val parsed = parseDamageExpression(damageDice)
         val count = if (critical) parsed.first * 2 else parsed.first
         val rolls = if (hit) List(count) { rollDie(parsed.second, random) } else emptyList()
-        val damage = if (hit) (rolls.sum() + damageModifier).coerceAtLeast(0) else 0
-        return AttackResult(roll, targetArmorClass, hit, critical, rolls, damageModifier, damage)
+        val fixedModifier = parsed.third + damageModifier
+        val damage = if (hit) (rolls.sum() + fixedModifier).coerceAtLeast(0) else 0
+        return AttackResult(roll, targetArmorClass, hit, critical, rolls, fixedModifier, damage)
     }
 
     /** Aceita expressões simples como 1d8, 2d6+3 ou 1d4-1. */
@@ -133,11 +134,6 @@ object RulesEngine {
     fun applyDamage(currentHp: Int, amount: Int): Int {
         require(amount >= 0)
         return (currentHp - amount).coerceAtLeast(0)
-    }
-
-    private fun parseDice(expression: String): Pair<Int, Int> {
-        val parsed = parseDamageExpression(expression)
-        return parsed.first to parsed.second
     }
 
     private fun parseDamageExpression(expression: String): Triple<Int, Int, Int> {
