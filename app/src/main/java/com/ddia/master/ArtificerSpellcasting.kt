@@ -52,13 +52,17 @@ object ArtificerSpellcasting {
     }
 
     /** Descanso longo restaura os espaços; permite trocar um truque conhecido. */
-    fun longRest(state: SpellState, replacementCantrip: String? = null): SpellState {
+    fun longRest(state: SpellState, oldCantrip: String? = null, replacementCantrip: String? = null): SpellState {
         val progression = ArtificerRules.progression(state.level)
         var cantrips = state.knownCantrips
-        if (replacementCantrip != null) {
+        require((oldCantrip == null) == (replacementCantrip == null)) {
+            "Para trocar um truque, informe o truque antigo e o novo."
+        }
+        if (oldCantrip != null && replacementCantrip != null) {
+            require(oldCantrip in cantrips) { "O truque antigo não é conhecido." }
             require(replacementCantrip.isNotBlank()) { "O truque substituto não pode ficar vazio." }
             require(replacementCantrip !in cantrips) { "O Artífice já conhece esse truque." }
-            cantrips = (cantrips - cantrips.first()) + replacementCantrip
+            cantrips = (cantrips - oldCantrip) + replacementCantrip
         }
         return state.copy(knownCantrips = cantrips, remainingSlots = progression.spellSlots)
     }
