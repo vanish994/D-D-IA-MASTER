@@ -13,7 +13,7 @@ package com.ddia.master
 object ArtificerRules {
     const val CLASS_NAME = "Artífice"
     const val HIT_DIE = 8
-    const val PRIMARY_ABILITY = RulesEngine.Ability.INTELLIGENCE
+    val PRIMARY_ABILITY = RulesEngine.Ability.INTELLIGENCE
 
     enum class Subclass(val displayName: String) {
         ALCHEMIST("Alquimista"),
