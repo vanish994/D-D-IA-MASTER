@@ -89,6 +89,7 @@ jobs:
         run: godot --headless --editor --path . --quit
 
       - name: Export Android APK
+        shell: bash
         run: |
           set -euxo pipefail
           mkdir -p build
