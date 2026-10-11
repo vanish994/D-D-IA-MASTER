@@ -6,6 +6,9 @@ package com.ddia.master
  * Fonte de referência: Eberron: Forge of the Artificer (Wizards of the Coast, 2025).
  * Este arquivo registra valores e comportamentos para o motor; não reproduz o texto
  * descritivo do livro. Habilidades específicas serão implementadas em módulos próprios.
+ * ATENÇÃO: a tabela numérica inicial é provisória, baseada no playtest oficial de 2025;
+ * deve ser conferida com a versão publicada de Eberron: Forge of the Artificer antes
+ * de declarar a progressão final como validada.
  */
 object ArtificerRules {
     const val CLASS_NAME = "Artífice"
@@ -89,8 +92,9 @@ object ArtificerRules {
     )
 
     /**
-     * Progressão estrutural da classe. Os efeitos descritos por cada característica
-     * serão implementados nos respectivos módulos de regras, sem depender da interface.
+     * Esqueleto provisório da progressão. Conferir cada nível com o livro final de 2025
+     * antes de tratar estes valores como definitivos. Os efeitos das características
+     * serão implementados em módulos próprios, sem depender da interface.
      */
     private val progression = listOf(
         LevelProgression(1, listOf("Conjuração", "Magia do Inventor"), 0, 0, 2, 2, listOf(2, 0, 0, 0, 0)),
