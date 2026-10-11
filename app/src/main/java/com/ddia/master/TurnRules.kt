@@ -132,7 +132,7 @@ object TurnRules {
     ): ActionOutcome {
         val actor = state.combatants[intent.actorId]
             ?: return rejected(state, "O personagem informado não existe.")
-        if (!actor.isAlive) return rejected(state, "Um personagem com 0 PV não pode agir.")
+        if (!actor.isAlive && intent.type != IntentType.END_TURN) return rejected(state, "Um personagem com 0 PV não pode agir.")
         if (intent.type != IntentType.END_TURN && intent.actorId != state.activeActorId) {
             return rejected(state, "Não é o turno deste personagem.")
         }
@@ -251,12 +251,20 @@ object TurnRules {
 
     private fun endTurn(state: CombatState, actorId: String): ActionOutcome {
         if (actorId != state.activeActorId) return rejected(state, "Só o personagem ativo pode encerrar o turno.")
-        val aliveIds = state.initiativeOrder.filter { state.combatants[it]?.isAlive == true }
-        if (aliveIds.isEmpty()) return rejected(state, "Não há combatentes ativos.")
-        val currentPosition = aliveIds.indexOf(actorId)
-        val wrapped = currentPosition == aliveIds.lastIndex
-        val nextId = aliveIds[(currentPosition + 1) % aliveIds.size]
-        val nextIndex = state.initiativeOrder.indexOf(nextId)
+        var offset = 1
+        var nextIndex = -1
+        while (offset <= state.initiativeOrder.size) {
+            val candidateIndex = (state.activeTurnIndex + offset) % state.initiativeOrder.size
+            val candidateId = state.initiativeOrder[candidateIndex]
+            if (state.combatants.getValue(candidateId).isAlive) {
+                nextIndex = candidateIndex
+                break
+            }
+            offset++
+        }
+        if (nextIndex < 0) return rejected(state, "Não há combatentes ativos.")
+        val nextId = state.initiativeOrder[nextIndex]
+        val wrapped = state.activeTurnIndex + offset >= state.initiativeOrder.size
         val resetUsage = state.usage + (nextId to TurnUsage())
         return ActionOutcome(
             true,
