@@ -1,29 +1,31 @@
 extends RefCounted
 class_name SoloCombat
 
+const Rules = preload("res://scripts/rules_engine.gd")
+
 static func roll_die(sides: int) -> int:
-	return randi_range(1, sides)
+	return Rules.roll_die(sides)
 
 static func player_attack(character: Dictionary, enemy: Dictionary) -> Dictionary:
-	var d20 := roll_die(20)
-	var total: int = d20 + int(character.get("attack_bonus", 0))
-	var hit := d20 == 20 or (d20 != 1 and total >= int(enemy.get("ac", 12)))
-	var damage := 0
-	if hit:
-		damage = roll_die(8) + 3
-		if d20 == 20:
-			damage += roll_die(8) + 3
-		enemy["hp"] = max(0, int(enemy.get("hp", 0)) - damage)
-	return {"hit": hit, "roll": d20, "total": total, "damage": damage, "enemy_hp": int(enemy.get("hp", 0))}
+	var result: Dictionary = Rules.resolve_attack(
+		int(character.get("attack_bonus", 0)),
+		int(enemy.get("ac", 12)),
+		int(character.get("damage_die", 8)),
+		int(character.get("damage_bonus", 3))
+	)
+	if result["hit"]:
+		enemy["hp"] = maxi(0, int(enemy.get("hp", 0)) - int(result["damage"]))
+	result["enemy_hp"] = int(enemy.get("hp", 0))
+	return result
 
 static func enemy_attack(character: Dictionary, enemy: Dictionary) -> Dictionary:
-	var d20 := roll_die(20)
-	var total: int = d20 + int(enemy.get("attack_bonus", 3))
-	var hit := d20 == 20 or (d20 != 1 and total >= int(character.get("armor_class", 10)))
-	var damage := 0
-	if hit:
-		damage = roll_die(6) + 1
-		if d20 == 20:
-			damage += roll_die(6) + 1
-		character["hp"] = max(0, int(character.get("hp", 0)) - damage)
-	return {"hit": hit, "roll": d20, "total": total, "damage": damage, "player_hp": int(character.get("hp", 0))}
+	var result: Dictionary = Rules.resolve_attack(
+		int(enemy.get("attack_bonus", 3)),
+		int(character.get("armor_class", 10)),
+		int(enemy.get("damage_die", 6)),
+		int(enemy.get("damage_bonus", 1))
+	)
+	if result["hit"]:
+		character["hp"] = maxi(0, int(character.get("hp", 0)) - int(result["damage"]))
+	result["player_hp"] = int(character.get("hp", 0))
+	return result
