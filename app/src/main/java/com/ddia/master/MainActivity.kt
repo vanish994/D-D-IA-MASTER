@@ -4,42 +4,39 @@ import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import kotlin.random.Random
+import androidx.compose.ui.unit.sp
 
-private data class Hero(
-    val name: String,
-    val role: String,
-    val maxHp: Int,
-    val attackBonus: Int,
-    val damage: Int,
-    val armor: Int
-)
+private val Night = Color(0xFF07111D)
+private val Panel = Color(0xFF0C1928)
+private val Gold = Color(0xFFD6A65A)
+private val Parchment = Color(0xFFF1E5D0)
+private val Muted = Color(0xFFB9C2D0)
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val prefs = getSharedPreferences("crypt_save", Context.MODE_PRIVATE)
         setContent {
-            MaterialTheme {
-                GameScreen(
-                    savedName = prefs.getString("name", "") ?: "",
-                    savedRole = prefs.getString("role", "Guerreiro") ?: "Guerreiro",
-                    savedHp = prefs.getInt("hp", -1),
-                    savedGoblinHp = prefs.getInt("goblinHp", -1),
-                    savedLog = prefs.getString("log", "") ?: "",
-                    onSave = { name, role, hp, goblinHp, log ->
-                        prefs.edit().putString("name", name).putString("role", role)
-                            .putInt("hp", hp).putInt("goblinHp", goblinHp)
-                            .putString("log", log).apply()
-                    }
+            MaterialTheme(colorScheme = darkColorScheme(background = Night, surface = Panel, primary = Gold,
+                onPrimary = Night, onBackground = Parchment, onSurface = Parchment, secondary = Muted)) {
+                NarrationScreen(
+                    initialLog = prefs.getString("log", "") ?: "",
+                    onSave = { log -> prefs.edit().putString("log", log).apply() }
                 )
             }
         }
@@ -47,166 +44,86 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-private fun GameScreen(
-    savedName: String,
-    savedRole: String,
-    savedHp: Int,
-    savedGoblinHp: Int,
-    savedLog: String,
-    onSave: (String, String, Int, Int, String) -> Unit
-) {
-    val roles = listOf("Guerreiro", "Ladino", "Clérigo")
-    var name by remember { mutableStateOf(savedName) }
-    var role by remember { mutableStateOf(if (savedRole in roles) savedRole else "Guerreiro") }
-    val hero = remember(role, name) {
-        when (role) {
-            "Ladino" -> Hero(name.ifBlank { "Aventureiro" }, role, 10, 5, 6, 14)
-            "Clérigo" -> Hero(name.ifBlank { "Aventureiro" }, role, 11, 4, 6, 16)
-            else -> Hero(name.ifBlank { "Aventureiro" }, role, 13, 5, 8, 16)
+private fun NarrationScreen(initialLog: String, onSave: (String) -> Unit) {
+    var log by remember { mutableStateOf(initialLog.ifBlank {
+        "Após horas de viagem por uma trilha íngreme, você avista as ruínas de um antigo forte no topo da colina. A lua cheia ilumina as torres quebradas e o vento sopra entre as muralhas desmoronadas, trazendo um som distante, como se algo se movesse lá dentro.\n\nO caminho à frente é estreito e rochoso. O portão principal está entreaberto."
+    }) }
+    var lastChoice by remember { mutableStateOf("O silêncio envolve as ruínas.") }
+    fun narrate(text: String) { log = (log + "\n\n" + text).takeLast(12000) }
+
+    Column(Modifier.fillMaxSize().background(Night).padding(horizontal = 12.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(Modifier.fillMaxWidth().height(58.dp).border(1.dp, Gold.copy(alpha = .7f), RoundedCornerShape(10.dp))
+            .background(Panel, RoundedCornerShape(10.dp)).padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text("‹", color = Gold, fontSize = 32.sp)
+            Box(Modifier.padding(horizontal = 10.dp).size(36.dp).border(1.dp, Gold, RoundedCornerShape(8.dp)), contentAlignment = Alignment.Center) {
+                Text("✦", color = Gold, fontSize = 24.sp)
+            }
+            Column(Modifier.weight(1f)) {
+                Text("O Mestre", color = Parchment, fontSize = 21.sp, fontFamily = FontFamily.Serif)
+                Text("AVENTURAS GANHAM VIDA", color = Gold, fontSize = 9.sp, letterSpacing = 1.3.sp)
+            }
+            TextButton(onClick = { onSave(log); lastChoice = "Histórico salvo neste aparelho." }) { Text("Salvar", color = Gold) }
+        }
+
+        Box(Modifier.fillMaxWidth().weight(0.34f).heightIn(min = 130.dp)
+            .border(1.dp, Gold.copy(alpha = .75f), RoundedCornerShape(10.dp))
+            .background(Brush.verticalGradient(listOf(Color(0xFF17334C), Color(0xFF0A1827), Color(0xFF251D21))), RoundedCornerShape(10.dp)),
+            contentAlignment = Alignment.Center) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                Text("☾", color = Color(0xFFE5D7B8), fontSize = 36.sp)
+                Text("RUÍNAS DO FORTE", color = Parchment, fontSize = 19.sp, fontFamily = FontFamily.Serif, letterSpacing = 2.sp)
+                Text("Torres partidas • névoa • luzes distantes", color = Muted, fontSize = 11.sp)
+                Text("━━━━━━━━━━━━━━━━━━━━", color = Gold.copy(alpha = .7f), fontSize = 12.sp)
+            }
+        }
+
+        Column(Modifier.fillMaxWidth().weight(0.42f).heightIn(min = 190.dp)
+            .border(1.dp, Gold.copy(alpha = .8f), RoundedCornerShape(12.dp))
+            .background(Panel, RoundedCornerShape(12.dp)).padding(14.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("✧  NARRAÇÃO DO MESTRE", color = Gold, fontSize = 12.sp, letterSpacing = 1.1.sp, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.weight(1f))
+                Text("HISTÓRICO", color = Muted, fontSize = 9.sp)
+            }
+            HorizontalDivider(Modifier.padding(vertical = 8.dp), color = Gold.copy(alpha = .35f))
+            // O painel permanece fixo; apenas o texto dentro dele rola e mantém todo o histórico.
+            Column(Modifier.fillMaxWidth().weight(1f).verticalScroll(rememberScrollState())) {
+                Text(log, color = Parchment, fontSize = 16.sp, lineHeight = 24.sp, fontFamily = FontFamily.Serif)
+                Spacer(Modifier.height(10.dp))
+                Text(lastChoice, color = Muted, fontSize = 12.sp)
+            }
+        }
+
+        Text("ESCOLHA O QUE FAZER", color = Gold, fontSize = 12.sp, letterSpacing = 1.2.sp, fontWeight = FontWeight.Bold)
+        StoryChoice("Seguir pelo portão principal", "A entrada parece ser a rota mais direta.") {
+            narrate("Você se aproxima do portão principal. As dobradiças rangem e uma sombra se move além da entrada.")
+            lastChoice = "Você escolheu: seguir pelo portão principal."
+        }
+        StoryChoice("Contornar pelas ruínas", "Talvez exista uma entrada menos vigiada.") {
+            narrate("Você contorna a muralha quebrada e encontra marcas recentes na lama. Algo esteve aqui há pouco.")
+            lastChoice = "Você escolheu: contornar pelas ruínas."
+        }
+        StoryChoice("Procurar uma rota pela floresta", "Pode ser mais seguro, mas é mais demorado.") {
+            narrate("Você entra entre as árvores e encontra uma passagem estreita atrás do forte.")
+            lastChoice = "Você escolheu: procurar uma rota pela floresta."
+        }
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedButton(onClick = { lastChoice = "A rolagem ainda será conectada ao motor de regras." }, modifier = Modifier.weight(1f)) { Text("Rolar d20") }
+            Button(onClick = { onSave(log); lastChoice = "Histórico salvo neste aparelho." }, modifier = Modifier.weight(1f)) { Text("Salvar jogo") }
         }
     }
-    var hp by remember { mutableIntStateOf(if (savedHp >= 0) savedHp else hero.maxHp) }
-    var goblinHp by remember { mutableIntStateOf(if (savedGoblinHp >= 0) savedGoblinHp else 10) }
-    var potions by remember { mutableIntStateOf(1) }
-    var log by remember {
-        mutableStateOf(savedLog.ifBlank {
-            "Você chega à entrada de uma cripta esquecida. Um goblin bloqueia o corredor. O que fará?"
-        })
-    }
-    var lastRoll by remember { mutableStateOf("Nenhuma rolagem ainda.") }
-    var created by remember { mutableStateOf(savedName.isNotBlank()) }
-    val dead = hp <= 0
-    val won = goblinHp <= 0
+}
 
-    fun addLog(message: String) {
-        log = "$message\n\n$log".take(3500)
-    }
-
-    Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-        Column(
-            modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(18.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Text("A CRIPTA", style = MaterialTheme.typography.headlineLarge)
-            Text("RPG solo • protótipo Android", style = MaterialTheme.typography.bodyMedium)
-
-            Card {
-                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text("Seu aventureiro", style = MaterialTheme.typography.titleLarge)
-                    OutlinedTextField(
-                        value = name, onValueChange = { name = it },
-                        label = { Text("Nome do personagem") },
-                        singleLine = true, modifier = Modifier.fillMaxWidth()
-                    )
-                    Text("Classe")
-                    roles.forEach { option ->
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            RadioButton(selected = role == option, onClick = {
-                                val oldMax = hero.maxHp
-                                role = option
-                                hp = if (hp == oldMax) when (option) {
-                                    "Ladino" -> 10
-                                    "Clérigo" -> 11
-                                    else -> 13
-                                } else hp.coerceAtMost(when (option) {
-                                    "Ladino" -> 10
-                                    "Clérigo" -> 11
-                                    else -> 13
-                                })
-                            })
-                            Text(option)
-                        }
-                    }
-                    Button(onClick = {
-                        created = true
-                        hp = when (role) { "Ladino" -> 10; "Clérigo" -> 11; else -> 13 }
-                        goblinHp = 10
-                        potions = 1
-                        addLog("${hero.name}, ${role.lowercase()}, entra na cripta. Um goblin surge das sombras!")
-                    }, modifier = Modifier.fillMaxWidth()) {
-                        Text("Criar / reiniciar aventura")
-                    }
-                }
-            }
-
-            Card {
-                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text("Ficha", style = MaterialTheme.typography.titleLarge)
-                    Text("Nome: ${hero.name}  •  Classe: $role")
-                    Text("PV: ${hp.coerceAtLeast(0)} / ${hero.maxHp}    CA: ${hero.armor}")
-                    Text("Bônus de ataque: +${hero.attackBonus}    Poções: $potions")
-                    HorizontalDivider()
-                    Text("Goblin: ${goblinHp.coerceAtLeast(0)} / 10 PV")
-                    Text(if (won) "Vitória! O corredor está livre." else if (dead) "Você caiu. Reinicie a aventura para tentar novamente." else "O combate continua.")
-                }
-            }
-
-            Card {
-                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Ações", style = MaterialTheme.typography.titleLarge)
-                    Button(
-                        enabled = created && !won && !dead,
-                        onClick = {
-                            val die = Random.nextInt(1, 21)
-                            val total = die + hero.attackBonus
-                            lastRoll = "Ataque: d20 ($die) + ${hero.attackBonus} = $total"
-                            if (die == 20 || total >= 12) {
-                                val damage = if (die == 20) hero.damage + Random.nextInt(1, 5) else hero.damage
-                                goblinHp = (goblinHp - damage).coerceAtLeast(0)
-                                addLog("$lastRoll. Acerto! Você causa $damage de dano.")
-                            } else {
-                                addLog("$lastRoll. Você erra o goblin.")
-                            }
-                            if (goblinHp > 0) {
-                                val enemyRoll = Random.nextInt(1, 21)
-                                if (enemyRoll + 4 >= hero.armor) {
-                                    val damage = Random.nextInt(1, 5)
-                                    hp = (hp - damage).coerceAtLeast(0)
-                                    addLog("O goblin ataca (d20 $enemyRoll + 4) e causa $damage de dano.")
-                                } else addLog("O goblin ataca (d20 $enemyRoll + 4), mas erra.")
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    ) { Text("Atacar (rola os dados)") }
-                    OutlinedButton(
-                        enabled = created && !dead && !won && potions > 0 && hp < hero.maxHp,
-                        onClick = {
-                            val heal = minOf(6, hero.maxHp - hp)
-                            hp += heal
-                            potions--
-                            addLog("Você usa uma poção e recupera $heal PV.")
-                            val enemyRoll = Random.nextInt(1, 21)
-                            if (enemyRoll + 4 >= hero.armor) {
-                                val damage = Random.nextInt(1, 5)
-                                hp = (hp - damage).coerceAtLeast(0)
-                                addLog("O goblin aproveita a abertura e causa $damage de dano.")
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    ) { Text("Beber poção (cura até 6 PV)") }
-                    OutlinedButton(
-                        onClick = {
-                            lastRoll = "d20 = ${Random.nextInt(1, 21)}"
-                            addLog("Você testa a sorte: $lastRoll")
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    ) { Text("Rolar d20") }
-                    Text(lastRoll, style = MaterialTheme.typography.bodyMedium)
-                    Button(
-                        onClick = { onSave(name, role, hp, goblinHp, log); addLog("Jogo salvo neste aparelho.") },
-                        modifier = Modifier.fillMaxWidth()
-                    ) { Text("Salvar partida neste aparelho") }
-                }
-            }
-
-            Card {
-                Column(Modifier.padding(16.dp)) {
-                    Text("Diário da aventura", style = MaterialTheme.typography.titleLarge)
-                    Spacer(Modifier.height(8.dp))
-                    Text(log)
-                }
-            }
-            Text("Versão inicial: regras simplificadas para testar a aventura. Ainda não é uma implementação completa das regras oficiais de D&D 2024.", style = MaterialTheme.typography.bodySmall)
+@Composable
+private fun StoryChoice(title: String, subtitle: String, onClick: () -> Unit) {
+    OutlinedButton(onClick = onClick, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
+        shape = RoundedCornerShape(9.dp), border = androidx.compose.foundation.BorderStroke(1.dp, Gold.copy(alpha = .75f)),
+        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+        colors = ButtonDefaults.outlinedButtonColors(contentColor = Parchment)) {
+        Column(Modifier.fillMaxWidth()) {
+            Text(title, fontFamily = FontFamily.Serif, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+            Text(subtitle, color = Muted, fontSize = 10.sp, lineHeight = 13.sp)
         }
     }
 }
